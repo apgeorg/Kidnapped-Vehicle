@@ -1,10 +1,3 @@
-/*
- * particle_filter.cpp
- *
- *  Created on: Dec 12, 2016
- *      Author: Tiffany Huang
- */
-
 #include <random>
 #include <algorithm>
 #include <iostream>
@@ -22,7 +15,7 @@ using namespace std;
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
     // Set the number of particles. Initialize all particles to first position (based on estimates of
     // x, y, theta and their uncertainties from GPS) and all weights to 1.
-	// Add random Gaussian noise to each particle.
+    // Add random Gaussian noise to each particle.
     num_particles  = 100;
     normal_distribution<double> dist_x(x, std[0]);
     normal_distribution<double> dist_y(y, std[1]);
@@ -74,24 +67,24 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     // observed measurement to this particular landmark.
     for (int i=0; i<observations.size(); ++i)
     {
-        // current observation
+        // Current observation
         LandmarkObs obs = observations[i];
 
-        // init minimum distance to maximum possible
+        // Init minimum distance
         double min_dist = numeric_limits<double>::max();
 
-        // init id of landmark
+        // Init landmark id
         int map_id = -1;
 
         for (int j=0; j<predicted.size(); ++j)
         {
-            // current prediction
+            // Current prediction
             LandmarkObs p = predicted[j];
 
-            // calc distance between current and predicted landmarks
+            // Calc distance between current and predicted landmarks
             double cur_dist = dist(obs.x, obs.y, p.x, p.y);
 
-            // find the predicted landmark nearest the current observed landmark
+            // Find the predicted landmark nearest the current observed landmark
             if (cur_dist < min_dist)
             {
                 min_dist = cur_dist;
@@ -99,54 +92,44 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
             }
         }
 
-        // assign the observed measurement to this particular landmark
+        // Assign the observed measurement to this particular landmark
         observations[i].id = map_id;
     }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
-	// TODO: Update the weights of each particle using a mult-variate Gaussian distribution. You can read
-	//   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-	// NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
-	//   according to the MAP'S coordinate system. You will need to transform between the two systems.
-	//   Keep in mind that this transformation requires both rotation AND translation (but no scaling).
-	//   The following is a good resource for the theory:
-	//   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-	//   and the following is a good resource for the actual equation to implement (look at equation 
-	//   3.33
-	//   http://planning.cs.uiuc.edu/node99.html
+    // Update the weights of each particle using a mult-variate Gaussian distribution. You can read
+    // more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
 
-    // for each particle
+    // For each particle
     for (int i=0; i<num_particles; ++i)
     {
       // get the particle x, y coordinates
       double p_x = particles[i].x;
       double p_y = particles[i].y;
       double p_theta = particles[i].theta;
-
-      // create a vector to hold the map landmark locations predicted to be within sensor range of the particle
       vector<LandmarkObs> predictions;
 
-      // for each map landmark
+      // For each map landmark
       for (int j=0; j<map_landmarks.landmark_list.size(); ++j)
       {
-        // get id and x,y coordinates
+        // Get id and x,y coordinates
         float l_x = map_landmarks.landmark_list[j].x_f;
         float l_y = map_landmarks.landmark_list[j].y_f;
         int l_id = map_landmarks.landmark_list[j].id_i;
 
-        // consider landmarks within sensor range of the particle
+        // Consider landmarks within sensor range of the particle
         float x_diff = fabs(l_x - p_x);
         float y_diff = fabs(l_y - p_y);
         if (x_diff <= sensor_range && y_diff <= sensor_range)
         {
           // add prediction
-          predictions.push_back(LandmarkObs{ l_id, l_x, l_y });
+          predictions.push_back(LandmarkObs{l_id, l_x, l_y });
         }
       }
 
-      // list of transformed observations from vehicle coordinates to map coordinates
+      // List of transformed observations from vehicle coordinates to map coordinates
       vector<LandmarkObs> transformed_obs;
       for (int j=0; j<observations.size(); ++j)
       {
@@ -155,10 +138,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         transformed_obs.push_back(LandmarkObs{observations[j].id, t_x, t_y });
       }
 
-      // data association for the predictions and transformed observations on current particle
+      // Data association for the predictions and transformed observations on current particle
       dataAssociation(predictions, transformed_obs);
 
-      // reinit weight
+      // re-init weight
       particles[i].weight = 1.0;
 
       for (int j=0; j<transformed_obs.size(); j++)
@@ -171,7 +154,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         int associated_prediction = transformed_obs[j].id;
 
         // get the x,y coordinates of the prediction associated with the current observation
-        for (unsigned int k = 0; k < predictions.size(); k++)
+        for (int k=0; k<predictions.size(); ++k)
         {
           if (predictions[k].id == associated_prediction)
           {

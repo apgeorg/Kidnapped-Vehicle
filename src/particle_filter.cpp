@@ -99,10 +99,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
-    // Update the weights of each particle using a mult-variate Gaussian distribution. You can read
-    // more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-
-    // For each particle
+    // Update the weights of each particle using a mult-variate Gaussian distribution.
     for (int i=0; i<num_particles; ++i)
     {
       // Get the particle x, y coordinates
@@ -138,19 +135,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         transformed_obs.push_back(LandmarkObs{observations[j].id, t_x, t_y });
       }
 
-      // Data association for the predictions and transformed observations on current particle
+      // Data association for the predictions and transformed observations
       dataAssociation(predictions, transformed_obs);
 
       // Re-init weight
       particles[i].weight = 1.0;
 
-      for (int j=0; j<transformed_obs.size(); j++)
+      for (int j=0; j<transformed_obs.size(); ++j)
       {
-        // placeholders for observation and associated prediction coordinates
-        double o_x, o_y, pr_x, pr_y;
-        o_x = transformed_obs[j].x;
-        o_y = transformed_obs[j].y;
-
+        double pr_x, pr_y;
+        double o_x = transformed_obs[j].x;
+        double o_y = transformed_obs[j].y;
         int associated_prediction = transformed_obs[j].id;
 
         // Get x,y coordinates of the prediction associated with the current observation
@@ -166,7 +161,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         // Calculate weight for this observation with multivariate Gaussian
         double s_x = std_landmark[0];
         double s_y = std_landmark[1];
-        double obs_w = (1/(2*M_PI*s_x*s_y)) * exp(-( pow(pr_x-o_x,2)/(2*pow(s_x, 2)) + (pow(pr_y-o_y,2)/(2*pow(s_y, 2))) ) );
+        double obs_w = (1/(2*M_PI*s_x*s_y)) * exp(-(pow(pr_x-o_x, 2)/(2*pow(s_x, 2)) + (pow(pr_y-o_y, 2)/(2*pow(s_y, 2)))));
 
         // Product of this obersvation weight with total observations weight
         particles[i].weight *= obs_w;

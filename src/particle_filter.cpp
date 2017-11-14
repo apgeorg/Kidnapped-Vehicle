@@ -105,7 +105,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // For each particle
     for (int i=0; i<num_particles; ++i)
     {
-      // get the particle x, y coordinates
+      // Get the particle x, y coordinates
       double p_x = particles[i].x;
       double p_y = particles[i].y;
       double p_theta = particles[i].theta;
@@ -124,7 +124,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         float y_diff = fabs(l_y - p_y);
         if (x_diff <= sensor_range && y_diff <= sensor_range)
         {
-          // add prediction
+          // Add prediction
           predictions.push_back(LandmarkObs{l_id, l_x, l_y });
         }
       }
@@ -141,7 +141,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       // Data association for the predictions and transformed observations on current particle
       dataAssociation(predictions, transformed_obs);
 
-      // re-init weight
+      // Re-init weight
       particles[i].weight = 1.0;
 
       for (int j=0; j<transformed_obs.size(); j++)
@@ -153,7 +153,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
         int associated_prediction = transformed_obs[j].id;
 
-        // get the x,y coordinates of the prediction associated with the current observation
+        // Get x,y coordinates of the prediction associated with the current observation
         for (int k=0; k<predictions.size(); ++k)
         {
           if (predictions[k].id == associated_prediction)
@@ -163,12 +163,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
           }
         }
 
-        // calculate weight for this observation with multivariate Gaussian
+        // Calculate weight for this observation with multivariate Gaussian
         double s_x = std_landmark[0];
         double s_y = std_landmark[1];
         double obs_w = (1/(2*M_PI*s_x*s_y)) * exp(-( pow(pr_x-o_x,2)/(2*pow(s_x, 2)) + (pow(pr_y-o_y,2)/(2*pow(s_y, 2))) ) );
 
-        // product of this obersvation weight with total observations weight
+        // Product of this obersvation weight with total observations weight
         particles[i].weight *= obs_w;
       }
     }
@@ -178,25 +178,25 @@ void ParticleFilter::resample() {
     // Resample particles with replacement with probability proportional to their weight.
     vector<Particle> new_particles;
     default_random_engine gen;
-    // get all of the current weights
+    // Get all of the current weights
     vector<double> weights;
     for (int i=0; i<num_particles; ++i)
     {
         weights.push_back(particles[i].weight);
     }
 
-    // generate random starting index for resampling wheel
+    // Generate random starting index for resampling wheel
     uniform_int_distribution<int> uniintdist(0, num_particles-1);
     auto index = uniintdist(gen);
 
-    // get max weight
+    // Get max weight
     double max_weight = *max_element(weights.begin(), weights.end());
 
-    // uniform random distribution [0.0, max_weight)
+    // Uniform random distribution [0.0, max_weight)
     uniform_real_distribution<double> unirealdist(0.0, max_weight);
     double beta = 0.0;
 
-    // spin the resample wheel!
+    // Spin the resample wheel
     for (int i=0; i<num_particles; ++i)
     {
         beta += unirealdist(gen) * 2.0;

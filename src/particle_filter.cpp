@@ -130,8 +130,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       for (int j=0; j<transformed_obs.size(); ++j)
       {
         double x, y;
-        double ox = transformed_obs[j].x;
-        double oy = transformed_obs[j].y;
+        double mu_x = transformed_obs[j].x;
+        double mu_y = transformed_obs[j].y;
         // Get x,y coordinates of the prediction associated with the current observation
         for (int k=0; k<predictions.size(); ++k)
         {
@@ -145,7 +145,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double sigx = std_landmark[0];
         double sigy = std_landmark[1];
         double gauss_norm =  1/(2 * M_PI * sigx * sigy);
-        double exponent  = (pow(x-ox, 2) / (2 * sigx * sigx)) + (pow(y-oy, 2) / (2 * sigy * sigy));
+        double exponent  = (pow(x-mu_x, 2) / (2 * sigx * sigx)) + (pow(y-mu_y, 2) / (2 * sigy * sigy));
         double obs_weight = gauss_norm * exp(-exponent);
         // Product of this obersvation weight with total observations weight
         particles[i].weight *= obs_weight;
@@ -158,25 +158,25 @@ void ParticleFilter::resample() {
     vector<Particle> new_particles;
     default_random_engine gen;
     // Get all of the current weights
+    //vector<double> weights(num_particles);
+    //generate(weights.begin(), weights.end(), [i=0, this] () mutable {return particles[i++].weight;});
     vector<double> weights;
     for (int i=0; i<num_particles; ++i)
     {
         weights.push_back(particles[i].weight);
     }
-
-    // Generate random starting index for resampling wheel
-    uniform_int_distribution<int> uniintdist(0, num_particles-1);
-    auto index = uniintdist(gen);
     // Get max weight
     double max_weight = *max_element(weights.begin(), weights.end());
-    // Uniform random distribution [0.0, max_weight)
-    uniform_real_distribution<double> unirealdist(0.0, max_weight);
+    // Generate random starting index for resampling wheel
+    uniform_int_distribution<int> uni_dist(0, num_particles-1);
+    uniform_real_distribution<double> uni_real_dist(0.0, max_weight);
+    int index = uni_dist(gen);
     double beta = 0.0;
-    // Spin the resample wheel
+    // Resampling wheel
     for (int i=0; i<num_particles; ++i)
     {
-        beta += unirealdist(gen) * 2.0;
-        while (beta > weights[index])
+        beta += uni_real_dist(gen) * 2.0;
+        while (weights[index] < beta)
         {
             beta -= weights[index];
             index = (index + 1) % num_particles;
